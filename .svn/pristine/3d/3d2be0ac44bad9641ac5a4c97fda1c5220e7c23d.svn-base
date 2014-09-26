@@ -1,0 +1,184 @@
+/*
+ * Copyright 2004-2008, Thorbjørn Lindeijer <thorbjorn@lindeijer.nl>
+ * Copyright 2004-2008, Adam Turk <aturk@biggeruniverse.com>
+ *
+ * This file is part of libtiled-java.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ *    1. Redistributions of source code must retain the above copyright notice,
+ *       this list of conditions and the following disclaimer.
+ *
+ *    2. Redistributions in binary form must reproduce the above copyright
+ *       notice, this list of conditions and the following disclaimer in the
+ *       documentation and/or other materials provided with the distribution.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE CONTRIBUTORS ``AS IS'' AND ANY EXPRESS OR
+ * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+ * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
+ * EVENT SHALL THE CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+ * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+ * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+ * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+ * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
+package GEngine.Core.Utils;
+
+import static GEngine.Graphics.Graphics2D.Pixmap.BYTES_PER_PIXEL;
+import GEngine.Graphics.Graphics2D.Texture;
+import java.awt.Graphics2D;
+import java.awt.Image;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.nio.ByteBuffer;
+import javax.imageio.ImageIO;
+import org.lwjgl.BufferUtils;
+import static org.lwjgl.opengl.GL11.GL_NEAREST;
+import static org.lwjgl.opengl.GL11.GL_RGBA;
+import static org.lwjgl.opengl.GL11.GL_RGBA8;
+import static org.lwjgl.opengl.GL11.GL_TEXTURE_2D;
+import static org.lwjgl.opengl.GL11.GL_TEXTURE_MAG_FILTER;
+import static org.lwjgl.opengl.GL11.GL_TEXTURE_MIN_FILTER;
+import static org.lwjgl.opengl.GL11.GL_TEXTURE_WRAP_S;
+import static org.lwjgl.opengl.GL11.GL_TEXTURE_WRAP_T;
+import static org.lwjgl.opengl.GL11.GL_UNSIGNED_BYTE;
+import static org.lwjgl.opengl.GL11.glBindTexture;
+import static org.lwjgl.opengl.GL11.glGenTextures;
+import static org.lwjgl.opengl.GL11.glTexImage2D;
+import static org.lwjgl.opengl.GL11.glTexParameteri;
+import org.lwjgl.opengl.GL12;
+
+/**
+ * This class provides functions to help out with saving/loading images.
+ */
+public class ImageHelper
+{
+    /**
+     * Converts an image to a PNG stored in a byte array.
+     *
+     * @param image
+     * @return a byte array with the PNG data
+     */
+    static public byte[] imageToPNG(Image image) {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+
+        try {
+            BufferedImage buffer = new BufferedImage(
+                    image.getWidth(null), image.getHeight(null),
+                    BufferedImage.TYPE_INT_ARGB);
+
+            buffer.createGraphics().drawImage(image, 0, 0, null);
+            ImageIO.write(buffer, "PNG", baos);
+            baos.close();
+        } catch (IOException e) {
+        }
+
+        return baos.toByteArray();
+    }
+
+    /**
+     * Converts a byte array into an image. The byte array must include the
+     * image header, so that a decision about format can be made.
+     *
+     * @param imageData The byte array of the data to convert.
+     * @return Image The image instance created from the byte array
+     * @throws IOException
+     * @see java.awt.Toolkit#createImage(byte[] imagedata)
+     */
+    static public BufferedImage bytesToImage(byte[] imageData) throws IOException {
+        return ImageIO.read(new ByteArrayInputStream(imageData));
+    }
+ /*
+ * Copyright 2013, Moskalyuk Volodimir
+ *
+ * This file is part of libtiled-java.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ *    1. Redistributions of source code must retain the above copyright notice,
+ *       this list of conditions and the following disclaimer.
+ *
+ *    2. Redistributions in binary form must reproduce the above copyright
+ *       notice, this list of conditions and the following disclaimer in the
+ *       documentation and/or other materials provided with the distribution.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE CONTRIBUTORS ``AS IS'' AND ANY EXPRESS OR
+ * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+ * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
+ * EVENT SHALL THE CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+ * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+ * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+ * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+ * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+    public static Texture BufferedImgToTexture(BufferedImage image){
+
+          int[] pixels = new int[image.getWidth() * image.getHeight()];
+            image.getRGB(0, 0, image.getWidth(), image.getHeight(), pixels, 0, image.getWidth());
+
+            ByteBuffer buffer = BufferUtils.createByteBuffer(image.getWidth() * image.getHeight() * BYTES_PER_PIXEL); //4 for RGBA, 3 for RGB
+
+            for(int y = 0; y < image.getHeight(); y++){
+                for(int x = 0; x < image.getWidth(); x++){
+                    int pixel = pixels[y * image.getWidth() + x];
+                    buffer.put((byte) ((pixel >> 16) & 0xFF));     // Red component
+                    buffer.put((byte) ((pixel >> 8) & 0xFF));      // Green component
+                    buffer.put((byte) (pixel & 0xFF));               // Blue component
+                    buffer.put((byte) ((pixel >> 24) & 0xFF));    // Alpha component. Only for RGBA
+                }
+            }
+
+            buffer.flip(); 
+
+            int textureID = glGenTextures(); //Generate texture ID
+            glBindTexture(GL_TEXTURE_2D, textureID); //Bind texture ID
+
+            //Setup wrap mode
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL12.GL_CLAMP_TO_EDGE);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL12.GL_CLAMP_TO_EDGE);
+
+            //Setup texture scaling filtering
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+            //Send texel data to OpenGL
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, image.getWidth(), image.getHeight(), 0, GL_RGBA, GL_UNSIGNED_BYTE, buffer);
+            Texture tex= new Texture(image.getWidth(), image.getHeight(),textureID, true);
+            //Return the texture ID so we can bind it later again
+          return tex;
+       }
+       /**
+        * Converts a given Image into a BufferedImage
+        *
+        * @param img The Image to be converted
+        * @return The converted BufferedImage
+        */
+        public static BufferedImage toBufferedImage(Image img)
+        {
+            if (img instanceof BufferedImage)
+            {
+                return (BufferedImage) img;
+            }
+
+            // Create a buffered image with transparency
+            BufferedImage bimage = new BufferedImage(img.getWidth(null), img.getHeight(null), BufferedImage.TYPE_INT_ARGB);
+
+            // Draw the image on to the buffered image
+            Graphics2D bGr = bimage.createGraphics();
+            bGr.drawImage(img, 0, 0, null);
+            bGr.dispose();
+
+            // Return the buffered image
+            return bimage;
+        }
+      
+}

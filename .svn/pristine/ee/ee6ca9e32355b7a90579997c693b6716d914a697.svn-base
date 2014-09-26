@@ -1,0 +1,126 @@
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package GEngine.Graphics.Graphics2D;
+
+import GEngine.Core.Utils.GLConstants;
+import GEngine.Core.Utils.ResourceLoader;
+
+/**
+ *
+ * @author 111
+ */
+public class Primitives
+{
+    
+    private final Texture2D point;
+    private final TextureRegion rect;
+    
+    public Primitives()
+    {
+        point= new Texture2D(ResourceLoader.getResource(
+                "GEngine/Graphics/Graphics2D/resources/pixel_texture.png"),
+                GLConstants.NEAREST);   
+        rect = new TextureRegion(point,0, 0, 1, 1);
+    }
+
+    public void drawPoint(SpriteBatch batch, float x, float y, int size)
+    {
+        batch.draw(rect, x, y, size, size);
+    }
+    
+    public void drawRect(SpriteBatch batch ,float x, float y, float width, float height, int thickness) 
+    {
+        batch.draw(rect, x, y, width, thickness);
+        batch.draw(rect, x, y, thickness, height);
+        batch.draw(rect, x, y+height-thickness, width, thickness);
+        batch.draw(rect, x+width-thickness, y, thickness, height);
+    }
+
+    public void drawLine(SpriteBatch batch,float x1, float y1, float x2, float y2, int thickness) 
+    {
+        float dx = x2-x1;
+        float dy = y2-y1;
+        float dist = (float)Math.sqrt(dx*dx + dy*dy);
+        float rad = (float)Math.atan2(dy, dx);
+        batch.draw(rect, x1, y1, dist, thickness, 0, 0, rad); 
+    }
+    
+  
+private final float M_PI = (float) Math.PI;    
+private final float NU_ANGLESTEP = (float) (M_PI/360.0);
+
+void DrawCircle(SpriteBatch batch, float xctr, float yctr, float radius, int thickness)
+{
+        int vertNum= 1;
+	float vectorX = 0,vectorY =0;			// vector to a point on circle from its center
+        float vectorX1 =0,vectorY1 =0;	
+	float angle;					// Angle in radians from circle start point.
+
+	
+	for(angle=0; angle < 2.0*M_PI + NU_ANGLESTEP; angle+= NU_ANGLESTEP)			
+	{
+            if(vertNum == 2)
+            {
+                vectorX1= (float) (xctr + radius * Math.cos(angle));	// set line endpoint
+                vectorY1= (float) (yctr + radius * Math.sin(angle));
+            }
+            else
+            {
+                vectorX= (float) (xctr + radius * Math.cos(angle));	// set line endpoint
+                vectorY= (float) (yctr + radius * Math.sin(angle)); 
+            }
+            
+            if(vertNum == 2)
+            {
+                drawLine(batch, vectorX,vectorY,vectorX1,vectorY1,thickness);	// plot the line endpoint.
+                vertNum =0;
+            }
+            vertNum++;
+	}
+	
+}
+
+//----------------------------------------------------------------------------
+// DrawFillCircle(xctr, yctr, radius)
+//
+// Draw a circle and fill the region inside it using the the current pen color.  
+// Default pen color is black, but the SetFillColor() function will change it.
+// Draws the shape using filled triangles.
+// x,y, radius are measured in pixels
+
+void DrawFillCircle(SpriteBatch batch,float xctr, float yctr, float radius)
+{
+	float vectorX1,vectorY1;		// vector to a point on circle from its center
+	float vectorX0,vectorY0;		// previous version of vectorX1,Y1;
+	float angle;					// Angle in radians from circle start point.
+
+	// Tell OpenGL to draw a series of triangles
+	vectorX1 = xctr + radius;	// Start at the circle's rightmost point.
+	vectorY1 = yctr;
+        
+         float[] vertices = new float[726];
+         int index = 0;
+	for(angle=NU_ANGLESTEP;		// step through all other points on circle;
+		angle < 2.0*M_PI + NU_ANGLESTEP; angle+= NU_ANGLESTEP)			
+	{								// (>2PI so that circle is always closed)
+		vectorX0 = vectorX1;		// save previous point's position,
+		vectorY0 = vectorY1;
+		vectorX1= (float) (xctr + radius*Math.cos(angle));	// find a new point on the circle,
+		vectorY1= (float) (yctr + radius*Math.sin(angle));
+                vertices[index] = xctr; 
+                vertices[index+1] = yctr;
+                vertices[index+2] = vectorX0;
+                vertices[index+3] = vectorY0;
+                vertices[index+4] = vectorX1;
+                vertices[index+5] = vectorY1;
+
+                index++;
+	}
+          batch.draw(rect, vertices, 0);
+							
+    }
+
+}

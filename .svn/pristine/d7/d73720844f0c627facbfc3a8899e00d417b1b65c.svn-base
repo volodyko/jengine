@@ -1,0 +1,214 @@
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package GEngine.Graphics.Graphics2D;
+
+import static GEngine.Core.GameEngine.DEBUG;
+import GEngine.Core.Window;
+import org.lwjgl.util.vector.Matrix4f;
+import org.lwjgl.util.vector.Vector2f;
+import org.lwjgl.util.vector.Vector3f;
+
+/**
+ *
+ * @author 111
+ */
+public class Camera 
+{
+
+    float panX, panY, rot, zoom;
+    private final float SPEED = 0.01f;
+   
+
+    public Camera()
+    {
+        this(0f,0f,1f,0f);
+    }
+    
+    public Camera(float panX, float panY)
+    {
+        this(panX,panY,1f,0f);
+    }
+
+    public Camera(float panX, float panY, float zoom)
+    {
+        this(panX,panY,0f,zoom);
+    }
+
+    public Camera(float panX, float panY, float rot, float zoom)
+    {
+        this.panX = panX;
+        this.panY = panY;
+        this.rot = rot;
+        this.zoom = zoom;
+    }
+    
+    
+    
+    /** Return x coordinate relative to current viewport
+     *
+     * @param x world coordinate
+     * @return normilized x
+     */
+    public float normalizeX(float x)
+    {
+        return x /zoom - panX;
+    }
+    /** Return y coordinate relative to current viewport
+     *
+     * @param y world coordinate
+     * @return normilized y
+    */
+    public float normalizeY(float y)
+    {
+        return y/zoom - panY;
+    }
+    
+    public float getWidth( )
+    {
+        return normalizeX(Window.getWidth());
+    }
+    public float getHeight( )
+    {
+        return normalizeY(Window.getHeight());
+    }
+    
+    
+    /**Draw current view matrix
+     * Call before SpriteBatch.begin() 
+     * @param batch current SpriteBatch
+     * @see SpriteBatch#begin()
+     */
+    public void drawCAMView(SpriteBatch batch)
+    {
+        if(batch.isDrawing())
+        {
+            if(DEBUG != 0)
+                System.out.println("Must be called before batch.begin() +"
+                        + "or after batch.end()");
+            return;
+        }
+        //get the instance of the view matrix for our batch
+        Matrix4f view = batch.getViewMatrix();
+
+        //reset the matrix to identity, i.e. "no camera transform"
+        view.setIdentity();
+
+        //scale the view
+        if (zoom != 1f) {
+             //we want to rotate by a center origin point, so first we translate
+            //view.translate(new Vector2f(getWidth()/2,getHeight()/2));
+                view.scale(new Vector3f(zoom, zoom, 1f));
+            //view.translate(new Vector2f(-getWidth()/2, -getHeight()/2));
+        }
+
+        //pan the camera by translating the view matrix
+        view.translate(new Vector2f(panX, panY));
+
+        //after translation, we can rotate...
+        if (rot!=0f) {
+            //we want to rotate by a center origin point, so first we translate
+            view.translate(new Vector2f(normalizeX(Window.getWidth()/2),
+                    normalizeY(Window.getHeight()/2)));
+
+            //then we rotate
+            view.rotate(rot, new Vector3f(0, 0, 1));
+
+            //then we translate back
+            view.translate(new Vector2f(normalizeX(-Window.getWidth()/2), normalizeY(-Window.getHeight()/2)));
+        }
+
+        //apply other transformations here...
+
+
+        //update the new view matrix
+        batch.updateUniforms();
+    }
+    
+    /** Draw viewport with no view matrix transormations 
+     * Call before SpriteBatch.begin
+     * @param batch current SpriteBatch
+     * @see SpriteBatch#begin()
+     */
+    public void drawHUDView(SpriteBatch batch)
+    {
+        if(batch.isDrawing())
+        {
+            if(DEBUG != 0)
+                System.out.println("Must be called before batch.begin() +"
+                        + "or after batch.end()");
+            return;
+        }
+        //draw the text with identity matrix, i.e. no camera transformation
+	batch.getViewMatrix().setIdentity();
+	batch.updateUniforms();
+    }
+
+    public void zoom(float zoom)
+    {
+        this.zoom = zoom;
+    }
+    
+   
+    public void rotate(float angle)
+    {
+        rot = angle;
+    }
+    
+    public void translate(float x, float y)
+    {
+        panX =x; 
+        panY = y;
+    }
+    
+    public float getPanX()
+    {
+        return panX;
+    }
+
+    public float getPanY()
+    {
+        return panY;
+    }
+
+    public float getAngle()
+    {
+        return rot;
+    }
+
+    public float getZoom()
+    {
+        return zoom;
+    }
+
+   
+    public void update()
+    {
+        update(panX,panY,rot,zoom);
+    }
+
+    
+    public void update(float x, float y)
+    {
+        update(x,y,rot,zoom);
+    }
+
+    
+    public void update(float x, float y,  float zoom)
+    {
+        update(x,y,zoom,rot);
+    }
+
+    
+    public void update(float x, float y, float zoom, float angle)
+    {
+        if (zoom != 1)
+            //this.zoom(zoom);
+        if(angle!=rot)
+            this.rotate(angle);
+        if(x != panX || y != panY)
+            this.translate(x, y);
+    }    
+}

@@ -1,0 +1,82 @@
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package GEngine.Graphics.Graphics2D;
+
+import GEngine.Core.Utils.ResourceLoader;
+
+/**
+ *
+ * @author 111
+ */
+public class FadeInOut 
+{
+    public final static int FADE_IN = 0;
+    public final static int FADE_OUT = 1;
+    
+    private static final Texture texture = new Texture(ResourceLoader.getResource(
+                "GEngine/Graphics/Graphics2D/resources/pixel_texture.png"));
+    private static float alpha;
+    private static Color color;
+    
+    private static int type;
+  
+    private static float width;
+    private static float height;
+    private static float x;
+    private static float y;
+    
+    private static boolean isFinished = false;
+   
+    public static void darw(SpriteBatch batch, float step)
+    {
+       if(!isFinished)
+       {
+            if(type == 1)
+            {
+                if(alpha != 0)
+                {
+                    batch.setColor(color.r, color.g, color.b, alpha-=step);
+                    batch.draw(texture, x, y,width, height);
+                }
+                else 
+                    isFinished = true;
+            }
+            else
+            {
+                if(alpha != 1)
+                {
+                    batch.setColor(color.r, color.g, color.b, alpha+=step);
+                    batch.draw(texture, x, y,width, height);
+                }
+                else
+                    isFinished = true;
+            }
+       }
+    }
+    
+        public static void play(float x, float y, float width, float height, Color color, int type)
+    {
+         isFinished =false;
+         FadeInOut.width = width;
+         FadeInOut.height = height;
+         FadeInOut.x = x;
+         FadeInOut.y = y;
+         FadeInOut.color = color;
+         
+         FadeInOut.type = type;
+         
+         if(type == 1)
+            alpha = 1;
+         else
+            alpha = 0;   
+    }
+    
+    public static  boolean isIsFinished()
+    {
+        return isFinished;
+    }
+ 
+}

@@ -1,0 +1,127 @@
+/*
+ * Copyright (c) 2013, Oskar Veerhoek
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright notice, this
+ *    list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ *    this list of conditions and the following disclaimer in the documentation
+ *    and/or other materials provided with the distribution.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR
+ * ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+ * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * The views and conclusions contained in the software and documentation are those
+ * of the authors and should not be interpreted as representing official policies,
+ * either expressed or implied, of the FreeBSD Project.
+ */
+
+package GEngine.Graphics.Graphics2D;
+
+import org.lwjgl.input.Keyboard;
+
+public class BitmapFont {
+
+   
+
+    /** The string that is rendered on-screen. */
+    private  final StringBuilder renderString = new StringBuilder();
+    /** The texture object for the bitmap font. */
+    private final  Texture2D fontTexture;
+    private final int gridSize;
+    private final int spacing;
+    
+    private int cellSize = 0;
+    private int asciiCode =0;
+    private int cellX =0;
+    private int cellY =0;
+    
+  
+    
+    
+    public BitmapFont(Texture2D fontTexture, int gridSize, int spacing)
+    {
+        this.fontTexture = fontTexture;
+        this.gridSize = gridSize;
+        this.spacing = spacing;
+        
+        cellSize = fontTexture.getWidth()/gridSize;
+    }
+    
+    public String getString()
+    {
+        return renderString.toString();
+    }
+    
+    public void drawString(SpriteBatch batch, int x, int y, int size) {   
+        
+        drawString(batch ,renderString.toString().trim(), x ,y, size , Color.WHITE);
+    }
+
+    /**
+     * Renders text using a font bitmap.
+     *
+     * @param batch sprite batch
+     * @param string the string to render
+     * @param x the x-coordinate of the bottom-left corner of where the string starts rendering
+     * @param y the y-coordinate of the bottom-left corner of where the string starts rendering
+     * @param characterSize cahracter Size in pixels
+     * @param color text color
+     */
+    public void drawString(SpriteBatch batch, String string,  
+                          int x, int y, int characterSize,  Color color) {
+        
+        // Iterate over all the characters in the string.
+        for (int i = 0; i < string.length(); i++) {
+            // Get the ASCII-code of the character by type-casting to integer.
+            asciiCode = (int) string.charAt(i);           
+            // The cell's x-coordinate is the greatest integer smaller than remainder of the ASCII-code divided by the
+            // amount of cells on the x-axis, times the cell size.
+            cellX = ((int) asciiCode % gridSize) * cellSize;
+            // The cell's y-coordinate is the greatest integer smaller than the ASCII-code divided by the amount of
+            // cells on the y-axis.
+            cellY = ((int) asciiCode / gridSize) * cellSize;            
+            batch.setColor(color);
+            batch.drawRegion(fontTexture, cellX, cellY, cellSize, cellSize, 
+                    (x+spacing)*i/2, y, characterSize,characterSize);
+            batch.setColor(Color.WHITE);
+        } 
+    }
+
+    public void input() {
+        while (Keyboard.next()) {
+            if (Keyboard.getEventKeyState()) {
+                // Reset the string if we press escape.
+                //if (Keyboard.getEventKey() == Keyboard.KEY_ESCAPE) {
+                 //   renderString.setLength(0);
+              //  }
+                // Append the pressed key to the string if the key isn't the back key or the shift key.
+                if (Keyboard.getEventKey() != Keyboard.KEY_BACK) {
+                    if (Keyboard.getEventKey() != Keyboard.KEY_LSHIFT) {
+                        renderString.append(Keyboard.getEventCharacter());
+                        //                        renderString.append((char) Keyboard.getEventCharacter() - 1);
+                    }
+                    // If the key is the back key, shorten the string by one character.
+                } else if (renderString.length() > 0) {
+                    renderString.setLength(renderString.length() - 1);
+                }
+            }
+        }
+    }
+
+
+    public void dispose() {
+       fontTexture.dispose();  
+    }
+}

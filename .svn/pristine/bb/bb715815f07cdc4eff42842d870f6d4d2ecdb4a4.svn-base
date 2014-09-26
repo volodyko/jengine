@@ -1,0 +1,124 @@
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package GEngine.Graphics.Graphics2D;
+
+import java.util.HashMap;
+import java.util.Set;
+import org.lwjgl.util.Rectangle;
+
+/**
+ *
+ * @author 111
+ */
+public class Animation
+{  
+   public static int VERTICAL = 0;
+   public static int HORIZONTAL = 1;
+    
+   private HashMap<String,AnimationSprite> animations;
+   
+   private final Texture2D spriteSheet;
+    
+    public Animation(Texture2D spriteSheet)
+    {
+        this.spriteSheet = spriteSheet;
+       
+        this.animations = new HashMap<>();   
+    }
+    
+    //Cllection manipulation
+    public void addAnimation(String name, int x, int y, int frameCount, 
+                       int frameWidth, int frameHeight, int orientation)
+    {
+        animations.put(name, new AnimationSprite( frameCount, x,y,frameWidth,frameHeight, orientation));
+    }
+    public void removeAnimation(String name)
+    {
+        animations.remove(name);
+    }
+    public Set getAnimationSet()
+    {
+        return animations.keySet();
+    }
+    
+    
+    
+    public void start(String name)
+    {
+        animations.get(name).start();
+    }
+    public void stop(String name)
+    {
+        animations.get(name).stop();   
+    }
+    public void pause(String name)
+    {
+       animations.get(name).pause();
+    }
+    public void iterateFrame(String name, int delta)
+    {
+        animations.get(name).iterateFrame(delta);
+    }
+    public void draw(SpriteBatch batch, String name, float x, float y)
+    {
+        Rectangle clip = animations.get(name).draw();
+        batch.drawRegion(spriteSheet, clip.getX(), clip.getY(), clip.getWidth(), clip.getHeight(), 
+               x, y, clip.getWidth(),clip.getHeight());
+    }
+    
+    //Getters and setters
+    public int getFrequency(String name)
+    {
+        return animations.get(name).getFrequency();
+    }
+
+    public void setFrequency(String name, int frequency)
+    {
+        animations.get(name).setFrequency(frequency);
+    }
+
+    public boolean isIsPlaying(String name)
+    {
+        return animations.get(name).isIsPlaying();
+    }
+
+    public void setIsPlaying(String name, boolean isPlaying)
+    {
+        animations.get(name).setIsPlaying(isPlaying);
+    }
+    
+    public int getCurrentFrame(String name)
+    {
+        return animations.get(name).getCurrentFrame();
+    }
+
+    public void setCurrentFrame(String name, int currentFrame)
+    {
+        animations.get(name).setCurrentFrame(currentFrame);
+    }
+
+    public int getFrameWidth(String name)
+    {
+        return animations.get(name).getFrameWidth();
+    }
+
+    public int getFrameHeight(String name)
+    {
+        return animations.get(name).getFrameHeight();
+    }
+
+    public int getCurrentX(String name)
+    {
+        return animations.get(name).getCurrentX();
+    }
+
+    public int getCurrentY(String name)
+    {
+        return animations.get(name).getCurrentY();
+    }
+    
+
+}
